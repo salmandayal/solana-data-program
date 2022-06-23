@@ -14,7 +14,7 @@ import {
 import fs from 'mz/fs';
 import path from 'path';
 import * as borsh from 'borsh';
-
+import * as BufferLayout from '@solana/buffer-layout';
 import {getPayer, getRpcUrl, createKeypairFromFile} from './utils';
 
 /**
@@ -196,14 +196,62 @@ export async function checkProgram(): Promise<void> {
 }
 
 /**
+ * Increment instruction for hello world program
+ * @returns Buffer
+ */
+function createIncrementInstruction(): Buffer {
+  //We need to provide name for specific index of the byte array
+  const layout = BufferLayout.struct<
+    Readonly<{
+      instruction: number;
+    }>
+  >([BufferLayout.u8('instruction')]);
+  //Make a buffer of size of the layout.span
+  const data = Buffer.alloc(layout.span);
+  layout.encode({instruction: 0}, data);
+  return data;
+}
+
+/**
+ * Decrement instruction for hello world program
+ * @returns Buffer
+ */
+function createDecrementInstruction(): Buffer {
+  const layout = BufferLayout.struct<
+    Readonly<{
+      instruction: number;
+    }>
+  >([BufferLayout.u8('instruction')]);
+  const data = Buffer.alloc(layout.span);
+  layout.encode({instruction: 1}, data);
+  return data;
+}
+
+/**
+ * Set the increment counter to a specific value
+ */
+function createSetInstruction(value = 100): Buffer {
+  const layout = BufferLayout.struct<
+    Readonly<{
+      instruction: number;
+      value: number;
+    }>
+  >([BufferLayout.u8('instruction'), BufferLayout.u32('value')]);
+  const data = Buffer.alloc(layout.span);
+  layout.encode({instruction: 2, value}, data);
+  return data;
+}
+
+/**
  * Say hello
  */
 export async function sayHello(): Promise<void> {
   console.log('Saying hello to', greetedPubkey.toBase58());
+  // console.log('Increment ins:', createIncrementInstruction());
   const instruction = new TransactionInstruction({
     keys: [{pubkey: greetedPubkey, isSigner: false, isWritable: true}],
     programId,
-    data: Buffer.alloc(0), // All instructions are hellos
+    data: createDecrementInstruction(), // All instructions are hellos
   });
   await sendAndConfirmTransaction(
     connection,

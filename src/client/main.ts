@@ -16,7 +16,7 @@ async function main() {
   // Establish connection to the cluster
   await establishConnection();
 
-  // Determine who pays for the fees
+  // // Determine who pays for the fees
   await establishPayer();
 
   // Check if the program has been deployed
